@@ -63,7 +63,7 @@ int main(){
 	scene.AddLightsource(lightsource2);
 	scene.AddLightsource(lightsource3);
 
-	scene.SetDirectory("D:\\trial.bmp");
+	scene.SetDirectory("D:\\Work\\Coding\\C++\\Projects\\RayTracer\\Images\\Trial.bmp");
 	scene.Engage();
 	//-----------------------------------------------------------Tests
 
