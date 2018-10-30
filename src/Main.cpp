@@ -13,7 +13,7 @@ int main(){
 	//-----------------------------------------------------------Defining variables
 
 	//Define pixels of image
-	int pixel_x = 100, pixel_y = 100;
+	int pixel_x = 500, pixel_y = 500;
 
 	Vector3D camera(0, -5, 1);
 	Vector3D viewplane_pos(0, -5, 5);
@@ -47,8 +47,6 @@ int main(){
 	Plane plane4(plane_normal4, point_on_plane4, 0.2, 0.2, 0.5, 5, 100, 150, 250);
 	Plane plane5(plane_normal5, point_on_plane5, 0.2, 0.2, 0.1, 5, 100, 150, 250);
 
-	
-
 	scene.AddSphere(mySphere1);
 	scene.AddSphere(mySphere2);
 	scene.AddSphere(mySphere3);
@@ -63,7 +61,7 @@ int main(){
 	scene.AddLightsource(lightsource2);
 	scene.AddLightsource(lightsource3);
 
-	scene.SetDirectory("D:\Pictures\\Trial.bmp");
+	scene.SetDirectory("D:\\Git\\C++\\RayTracer\\images\\Trial.bmp");
 	scene.Engage();
 	//-----------------------------------------------------------Tests
 

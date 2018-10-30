@@ -115,6 +115,26 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\EasyBMP.h" />
+    <ClInclude Include="..\src\EasyBMP_BMP.h" />
+    <ClInclude Include="..\src\EasyBMP_DataStructures.h" />
+    <ClInclude Include="..\src\EasyBMP_VariousBMPutilities.h" />
+    <ClInclude Include="..\src\Plane.h" />
+    <ClInclude Include="..\src\Ray.h" />
+    <ClInclude Include="..\src\Scene.h" />
+    <ClInclude Include="..\src\Sphere.h" />
+    <ClInclude Include="..\src\Vector3D.h" />
+    <ClInclude Include="..\src\Viewplane.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\EasyBMP.cpp" />
+    <ClCompile Include="..\src\Main.cpp" />
+    <ClCompile Include="..\src\Plane.cpp" />
+    <ClCompile Include="..\src\Ray.cpp" />
+    <ClCompile Include="..\src\Scene.cpp" />
+    <ClCompile Include="..\src\Sphere.cpp" />
+    <ClCompile Include="..\src\Vector3D.cpp" />
+    <ClCompile Include="..\src\Viewplane.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

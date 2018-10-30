@@ -24,7 +24,7 @@ void Scene::AddLightsource(Vector3D lightsource)
 {
 	_lightsourcelist.push_back(lightsource);
 }
-void Scene::SetDirectory(char* directory)
+void Scene::SetDirectory(const char* directory)
 {
 	_directory = directory;
 }

@@ -17,7 +17,7 @@ using namespace std;
 class Scene{
 private:
 	BMP _myimage;
-	char* _directory;
+	const char* _directory;
 	vector <Sphere> _spherelist;
 	vector <Plane> _planelist;
 	vector <Vector3D> _lightsourcelist;
@@ -38,7 +38,7 @@ public:
 	void AddSphere(Sphere sphere);
 	void AddPlane(Plane plane);
 	void AddLightsource(Vector3D lightsource);
-	void SetDirectory(char* directory);
+	void SetDirectory(const char* directory);
 
 	//----------------------------------------------------------Scene Object Functions
 
