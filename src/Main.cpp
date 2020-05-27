@@ -13,7 +13,7 @@ int main(){
 	//-----------------------------------------------------------Defining variables
 
 	//Define pixels of image
-	int pixel_x = 500, pixel_y = 500;
+	int pixel_x = 100, pixel_y = 100;
 
 	Vector3D camera(0, -5, 1);
 	Vector3D viewplane_pos(0, -5, 5);
