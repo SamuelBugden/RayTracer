@@ -1,2 +1,2 @@
 # RayTracer
-C++ Ray Tracer ( To-do: Reflections )
+C++ Ray Tracer with Phong shading, shadows and recursive reflections

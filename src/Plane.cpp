@@ -1,7 +1,8 @@
 #include "Plane.h"
 
-Plane::Plane(Vector3D normal, Vector3D point, double k_a, double k_d, double k_s, double alpha, int red, int green, int blue)
+Plane::Plane(Vector3D normal, Vector3D point, double k_a, double k_d, double k_s, double alpha, int red, int green, int blue, double reflectivity)
 {
+	_reflectivity = reflectivity;
 	_NormalUnitVector = normal.MakeUnitVector();
 	_PointOnPlane = point;
 	_k_a = k_a;
@@ -60,6 +61,21 @@ int Plane::GetBlue()
 {
 	int blue = this->_blue;
 	return blue;
+}
+double Plane::GetReflectivity()
+{
+	return this->_reflectivity;
+}
+// Distance along the ray to the plane, or -1 if the ray is parallel to it or points away from it
+double Plane::Distance(Ray ray)
+{
+	double denominator = ray.GetUnit().DotProduct(this->_NormalUnitVector);
+	if (fabs(denominator) < 1e-12)
+		return -1;
+	double lambda = (this->_PointOnPlane - ray.GetPoint()).DotProduct(this->_NormalUnitVector) / denominator;
+	if (lambda > 0)
+		return lambda;
+	return -1;
 }
 bool Plane::intersect(Ray ray)
 {

@@ -12,11 +12,12 @@ private:
 	Vector3D _PointOnPlane;
 	double _k_a, _k_d, _k_s, _alpha;
 	int _red, _green, _blue;
+	double _reflectivity;
 public:
 
 	//----------------------------------------------------------Constructors and Destructors
 
-	Plane(Vector3D normal, Vector3D point, double k_a, double k_d, double k_s, double alpha, int red, int green, int blue);
+	Plane(Vector3D normal, Vector3D point, double k_a, double k_d, double k_s, double alpha, int red, int green, int blue, double reflectivity = 0);
 	Plane();
 	~Plane();
 
@@ -33,10 +34,12 @@ public:
 	int GetRed();
 	int GetGreen();
 	int GetBlue();
+	double GetReflectivity();
 	
 	//----------------------------------------------------------Ray-Plane Calculations
 
 	bool intersect(Ray ray);
+	double Distance(Ray ray);
 	bool checkShadow(Ray ray, Vector3D lightsource);
 	Ray reflected(Ray ray);
 };
