@@ -1,8 +1,9 @@
 #include "Sphere.h"
 using namespace std;
 
-Sphere::Sphere(double r, Vector3D centre, double k_a, double k_d, double k_s, double alpha, int red, int green, int blue)
+Sphere::Sphere(double r, Vector3D centre, double k_a, double k_d, double k_s, double alpha, int red, int green, int blue, double reflectivity)
 {
+	_reflectivity = reflectivity;
 	_r = r;
 	_centre = centre;
 	_k_a = k_a;
@@ -64,16 +65,38 @@ int Sphere::GetBlue()
 	int blue = this->_blue;
 	return blue;
 }
+double Sphere::GetReflectivity()
+{
+	return this->_reflectivity;
+}
+// Distance along the ray to the nearest intersection in front of its origin, or -1 if there is none
+double Sphere::Distance(Ray ray)
+{
+	double a = (ray.GetUnit()).DotProduct(ray.GetUnit());
+	double b = (2 * ray.GetUnit()).DotProduct((ray.GetPoint() - this->_centre));
+	double c = (ray.GetPoint() - this->_centre).DotProduct(ray.GetPoint() - this->_centre) - pow(this->_r, 2);
+	double discriminant = pow(b, 2) - 4 * a * c;
+	if (discriminant < 0)
+		return -1;
+	double root_near = (-b - sqrt(discriminant)) / (2 * a);
+	double root_far = (-b + sqrt(discriminant)) / (2 * a);
+	if (root_near > 0)
+		return root_near;
+	if (root_far > 0)
+		return root_far;
+	return -1;
+}
 bool Sphere::intersect(Ray ray)
 {
 	double a = (ray.GetUnit()).DotProduct(ray.GetUnit());
 	double b = (2 * ray.GetUnit()).DotProduct((ray.GetPoint() - this->_centre));
 	double c = (ray.GetPoint() - this->_centre).DotProduct(ray.GetPoint() - this->_centre) - pow(this->_r, 2);
 	double discriminant = pow(b, 2) - 4 * a * c;
-	if (discriminant >= 0)
-		return true;
-	else
+	if (discriminant < 0)
 		return false;
+	// Only count the sphere if it lies in front of the ray origin
+	double root1 = (-b + sqrt(discriminant)) / (2 * a);
+	return root1 > 0;
 }
 bool Sphere::checkShadow(Ray ray,Vector3D lightsource)
 {
@@ -82,7 +105,8 @@ bool Sphere::checkShadow(Ray ray,Vector3D lightsource)
 	double c = (ray.GetPoint() - this->_centre).DotProduct(ray.GetPoint() - this->_centre) - pow(this->_r, 2);
 	double root1 = (-b + sqrt(pow(b, 2) - 4 * a*c)) / (2 * a);
 	double root2 = (-b - sqrt(pow(b, 2) - 4 * a*c)) / (2 * a);
-	if (root1 > 0 && root2 > 0)
+	double distance_to_light = (lightsource - ray.GetPoint()).Magnitude();
+	if (root1 > 0 && root2 > 0 && root2 < distance_to_light)
 		return true;
 	else
 		return false;

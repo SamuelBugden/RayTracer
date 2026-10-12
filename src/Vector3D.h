@@ -20,11 +20,15 @@ public:
 	//----------------------------------------------------------Call Member Functions
 
 	double* GetVar();
+	double GetX() const;
+	double GetY() const;
+	double GetZ() const;
 
 	//----------------------------------------------------------Vector Maths Functions 
 
 	double Magnitude();
 	double DotProduct(const Vector3D& vector);
+	Vector3D CrossProduct(const Vector3D& vector);
 	Vector3D MakeUnitVector();
 
 	//----------------------------------------------------------Overloaded Operators

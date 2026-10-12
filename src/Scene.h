@@ -16,16 +16,24 @@ using namespace std;
 
 class Scene{
 private:
+
+	//----------------------------------------------------------Surface properties of whichever object a ray hit
+
+	struct Material{
+		double k_a, k_d, k_s, alpha, reflectivity;
+		double colour[3];
+	};
+
 	BMP _myimage;
 	const char* _directory;
 	vector <Sphere> _spherelist;
 	vector <Plane> _planelist;
 	vector <Vector3D> _lightsourcelist;
-	vector<Ray> _raylist;
-	vector<int> _indexlist;
-	vector<int>_objecttype;
 	Vector3D _camera;
 	Viewplane _viewplane;
+	int _max_depth;
+	double _light_intensity;
+	long long _primary_rays, _reflection_rays, _shadow_rays;
 public:
 
 	//----------------------------------------------------------Constructors and Destructors
@@ -39,16 +47,19 @@ public:
 	void AddPlane(Plane plane);
 	void AddLightsource(Vector3D lightsource);
 	void SetDirectory(const char* directory);
+	void SetMaxDepth(int max_depth);
+	void SetLightIntensity(double light_intensity);
 
 	//----------------------------------------------------------Scene Object Functions
 
-	int CalcNearestSurface(vector<Ray> raylist);
-	double* normalisedIllumination(Sphere this_sphere, double ambient, double diffusive, double specular);
-	double* normalisedIllumination(Plane this_plane, double ambient, double diffusive, double specular);
+	bool NearestSurface(Ray ray, Vector3D& point, Vector3D& normal, Material& material);
+	bool InShadow(Vector3D point, Vector3D lightsource);
+	void Trace(Ray ray, int depth, double colour[3]);
 
 	//----------------------------------------------------------Image Render Functions
 
 	void inputBMP(double illumination[], int i, int j);
+	void PrintProgress(int rows_done, int rows_total, double seconds_elapsed);
 	void Engage();
 };
 #endif

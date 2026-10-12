@@ -1,13 +1,23 @@
 #include "Scene.h"
 #include <iostream>
 #include <string>
+#include <chrono>
+#include <iomanip>
+#include <sstream>
 using namespace std;
+
+// Secondary rays start this far off the surface so they don't immediately re-hit it
+static const double EPSILON = 1e-6;
 
 Scene::Scene(Vector3D camera, Viewplane viewplane, Vector3D lightsource)
 {
 	_camera = camera;
 	_lightsourcelist.push_back(lightsource);
 	_viewplane = viewplane;
+	_directory = "Render.bmp";
+	_max_depth = 5;
+	_light_intensity = 2.0;
+	_primary_rays = _reflection_rays = _shadow_rays = 0;
 }
 Scene::~Scene()
 {
@@ -28,61 +38,103 @@ void Scene::SetDirectory(const char* directory)
 {
 	_directory = directory;
 }
-int Scene::CalcNearestSurface(vector<Ray> raylist)
+void Scene::SetMaxDepth(int max_depth)
 {
-	int index = 0;
-	double smallest = (raylist[0].GetPoint() - _camera).Magnitude();
-	for (int x = 1; x < (int)raylist.size(); x++){
-		Ray reflected = raylist[x];
-		double distance_to_surface= (reflected.GetPoint() - _camera).Magnitude();
-		if (distance_to_surface < smallest){
-			smallest = distance_to_surface;
-			index = x;
+	_max_depth = max_depth;
+}
+void Scene::SetLightIntensity(double light_intensity)
+{
+	_light_intensity = light_intensity;
+}
+bool Scene::NearestSurface(Ray ray, Vector3D& point, Vector3D& normal, Material& material)
+{
+	double nearest = -1;
+	int index = -1;
+	bool is_sphere = false;
+	for (int k = 0; k < (int)_spherelist.size(); k++){
+		double distance = _spherelist[k].Distance(ray);
+		if (distance > 0 && (nearest < 0 || distance < nearest)){
+			nearest = distance;
+			index = k;
+			is_sphere = true;
 		}
 	}
-	return index;
-}
-double* Scene::normalisedIllumination(Sphere sphere, double ambient, double diffusive, double specular)
-{
-	int Red_colour = sphere.GetRed();
-	int Green_colour = sphere.GetGreen();
-	int Blue_colour = sphere.GetBlue();
-
-	double red_component = (Red_colour * (ambient + diffusive)) + (255 * specular);
-	double green_component = (Green_colour * (ambient + diffusive)) + (255 * specular);
-	double blue_component = (Blue_colour * (ambient + diffusive)) + (255 * specular);
-
-	double illumination_total = red_component + green_component + blue_component;
-	double overload = illumination_total - (255 * 3);
-
-	if (overload > 0){
-		red_component = red_component + ((overload * Red_colour) / 2);
-		green_component = green_component + ((overload * Green_colour) / 2);
-		blue_component = blue_component + ((overload * Blue_colour) / 2);
+	for (int p = 0; p < (int)_planelist.size(); p++){
+		double distance = _planelist[p].Distance(ray);
+		if (distance > 0 && (nearest < 0 || distance < nearest)){
+			nearest = distance;
+			index = p;
+			is_sphere = false;
+		}
 	}
-	double illumination[3] = { red_component, green_component, blue_component };
-	return illumination;
-}
-double* Scene::normalisedIllumination(Plane plane, double ambient, double diffusive, double specular)
-{
-	int Red_colour = plane.GetRed();
-	int Green_colour = plane.GetGreen();
-	int Blue_colour = plane.GetBlue();
+	if (index < 0)
+		return false;
 
-	double red_component = (Red_colour * (ambient + diffusive)) + (255 * specular);
-	double green_component = (Green_colour * (ambient + diffusive)) + (255 * specular);
-	double blue_component = (Blue_colour * (ambient + diffusive)) + (255 * specular);
-
-	double illumination_total = red_component + green_component + blue_component;
-	double overload = illumination_total - (255 * 3);
-
-	if (overload > 0){
-		red_component = red_component + ((overload * Red_colour) / 2);
-		green_component = green_component + ((overload * Green_colour) / 2);
-		blue_component = blue_component + ((overload * Blue_colour) / 2);
+	point = (nearest * ray.GetUnit()) + ray.GetPoint();
+	if (is_sphere){
+		Sphere& sphere = _spherelist[index];
+		normal = (point - sphere.GetCentre()).MakeUnitVector();
+		material = { sphere.GetK_a(), sphere.GetK_d(), sphere.GetK_s(), sphere.GetAlpha(), sphere.GetReflectivity(),
+			{ (double)sphere.GetRed(), (double)sphere.GetGreen(), (double)sphere.GetBlue() } };
 	}
-	double illumination[3] = { red_component, green_component, blue_component };
-	return illumination;
+	else{
+		Plane& plane = _planelist[index];
+		normal = plane.GetNormal();
+		material = { plane.GetK_a(), plane.GetK_d(), plane.GetK_s(), plane.GetAlpha(), plane.GetReflectivity(), { 0, 0, 0 } };
+		plane.GetColourAt(point, material.colour);
+	}
+	// Shade the side of the surface the ray arrived from
+	if (normal.DotProduct(ray.GetUnit()) > 0)
+		normal = -1 * normal;
+	return true;
+}
+bool Scene::InShadow(Vector3D point, Vector3D lightsource)
+{
+	_shadow_rays++;
+	Vector3D to_light = lightsource - point;
+	double distance_to_light = to_light.Magnitude();
+	Ray ray_to_light(to_light.MakeUnitVector(), point);
+	// Only spheres cast shadows: the planes form the room's walls and some lights sit outside them
+	for (int m = 0; m < (int)_spherelist.size(); m++){
+		double distance = _spherelist[m].Distance(ray_to_light);
+		if (distance > 0 && distance < distance_to_light)
+			return true;
+	}
+	return false;
+}
+void Scene::Trace(Ray ray, int depth, double colour[3])
+{
+	Vector3D point, normal;
+	Material material;
+	if (!NearestSurface(ray, point, normal, material)){
+		colour[0] = colour[1] = colour[2] = 0;
+		return;
+	}
+	Vector3D unit = ray.GetUnit();
+	Vector3D reflected_unit = unit - (2 * unit.DotProduct(normal)) * normal;
+	Vector3D surface_point = point + EPSILON * normal;
+
+	//------------------------------------------------------Phong shading, with the total light intensity shared between the light sources
+	double light_intensity = _light_intensity / _lightsourcelist.size();
+	double diffusive = 0, specular = 0;
+	for (int l = 0; l < (int)_lightsourcelist.size(); l++){
+		if (InShadow(surface_point, _lightsourcelist[l]))
+			continue;
+		Vector3D unit_to_source = (_lightsourcelist[l] - point).MakeUnitVector();
+		diffusive += light_intensity * material.k_d * max(0.0, unit_to_source.DotProduct(normal));
+		specular += material.k_s * pow(max(0.0, unit_to_source.DotProduct(reflected_unit)), material.alpha);
+	}
+	for (int c = 0; c < 3; c++)
+		colour[c] = min(255.0, material.colour[c] * (material.k_a + diffusive) + 255 * specular);
+
+	//------------------------------------------------------Reflections: trace the reflected ray and blend it in
+	if (material.reflectivity > 0 && depth < _max_depth){
+		double reflected_colour[3];
+		_reflection_rays++;
+		Trace(Ray(reflected_unit, surface_point), depth + 1, reflected_colour);
+		for (int c = 0; c < 3; c++)
+			colour[c] = (1 - material.reflectivity) * colour[c] + material.reflectivity * reflected_colour[c];
+	}
 }
 void Scene::inputBMP(double illumination[],int i, int j)
 {
@@ -92,6 +144,49 @@ void Scene::inputBMP(double illumination[],int i, int j)
 	_myimage(i, j)->Alpha = 0;
 }
 
+// Formats a count with thousands separators, eg. 1234567 -> 1,234,567
+static string FormatCount(long long n)
+{
+	string digits = to_string(n);
+	string formatted;
+	int length = (int)digits.size();
+	for (int c = 0; c < length; c++){
+		formatted += digits[c];
+		if ((length - c - 1) % 3 == 0 && c != length - 1)
+			formatted += ',';
+	}
+	return formatted;
+}
+static void PrintRule()
+{
+	cout << "  " << string(60, '-') << "\n";
+}
+static void PrintField(const string& label, const string& value)
+{
+	cout << "  " << left << setw(16) << label << value << "\n";
+}
+void Scene::PrintProgress(int rows_done, int rows_total, double seconds_elapsed)
+{
+	const int bar_width = 36;
+	double fraction = (double)rows_done / rows_total;
+	int filled = (int)(fraction * bar_width);
+
+	string bar(filled, '=');
+	if (filled < bar_width)
+		bar += '>' + string(bar_width - filled - 1, ' ');
+
+	ostringstream timing;
+	timing << fixed << setprecision(1);
+	if (rows_done < rows_total){
+		double remaining = rows_done > 0 ? seconds_elapsed * (rows_total - rows_done) / rows_done : 0;
+		timing << "ETA " << remaining << "s";
+	}
+	else
+		timing << "done in " << seconds_elapsed << "s";
+
+	cout << "\r  Rendering  [" << bar << "] " << right << setw(3) << (int)(fraction * 100) << "%  "
+		<< left << setw(18) << timing.str() << flush;
+}
 void Scene::Engage()
 {
 	int pixel_x = _viewplane.GetPixel_x();
@@ -99,113 +194,54 @@ void Scene::Engage()
 
 	_myimage.SetSize(pixel_x, pixel_y);
 	_myimage.SetBitDepth(32);
+	_primary_rays = _reflection_rays = _shadow_rays = 0;
 
-	cout << "Rendering..." << endl;
-	int count_max = pixel_x * pixel_y;
-	int count = 0;
-	cout << "|< - - -100%- - - >|" << endl;
+	//------------------------------------------------------Scene summary
+	cout << "\n  RayTracer\n";
+	PrintRule();
+	PrintField("Resolution", to_string(pixel_x) + " x " + to_string(pixel_y) + " px");
+	PrintField("Objects", to_string(_spherelist.size()) + " spheres, " + to_string(_planelist.size()) + " planes");
+	PrintField("Lights", to_string(_lightsourcelist.size()));
+	PrintField("Max bounces", to_string(_max_depth));
+	PrintRule();
+
+	//------------------------------------------------------Render, updating the progress bar once per row
+	auto start = chrono::steady_clock::now();
+	int last_percent = 0;
+	PrintProgress(0, pixel_y, 0);
 	for (int j = 0; j < pixel_y; j++){
 		for (int i = 0; i < pixel_x; i++){
-			count++;
-			if (count == (count_max / 10)){
-				cout << " #";
-				count = 0;
-			}
-			for (int k = 0; k < (int)_spherelist.size(); k++){
-				bool intersect_sphere = _spherelist[k].intersect(_viewplane.GetPixelRay(_camera, i, j));
-				if (intersect_sphere == true){
-					Ray reflected = _spherelist[k].Reflect(_viewplane.GetPixelRay(_camera, i, j));
-					_raylist.push_back(reflected);
-					_indexlist.push_back(k);
-					_objecttype.push_back(1);
-				}
-			}
-			for (int p = 0; p < (int)_planelist.size(); p++){
-				bool intersect_plane = _planelist[p].intersect(_viewplane.GetPixelRay(_camera, i, j));
-				if (intersect_plane == true){
-					Ray reflected = _planelist[p].reflected(_viewplane.GetPixelRay(_camera, i, j));
-					_raylist.push_back(reflected);
-					_indexlist.push_back(p);
-					_objecttype.push_back(0);
-				}
-			}
-			double diffusive = 0, specular = 0;
 			double illumination[3];
-			int size = _raylist.size();
-			if (size == 0){
-				illumination[0] = 0;
-				illumination[1] = 0;
-				illumination[2] = 0;
-			}
-			else{
-				int index_r, index_s, objtype;
-				if (size == 1){
-					index_r = 0;
-					index_s = _indexlist[0];
-					objtype = _objecttype[0];
-				}
-				else{
-					index_r = CalcNearestSurface(_raylist);
-					index_s = _indexlist[index_r];
-					objtype = _objecttype[index_r];
-				}
-				Vector3D normal_at_point;
-				if (objtype == 1)
-					normal_at_point = (_raylist[index_r].GetPoint() - _spherelist[index_s].GetCentre()).MakeUnitVector();
-				else if (objtype == 0)
-					normal_at_point = (_planelist[index_s].GetNormal());
-				for (int l = 0; l < (int)_lightsourcelist.size(); l++)
-				{
-					Vector3D unit_to_source = (_lightsourcelist[l] - _raylist[index_r].GetPoint()).MakeUnitVector();
-					Ray ray_to_light(unit_to_source, _raylist[index_r].GetPoint());
-					bool shadowcheck = false;
-					int index_temp;
-					if (objtype == 1)
-						index_temp = index_s;
-					if (objtype == 0)
-						index_temp = -1;
-						
-					for (int m = 0; m < (int)_spherelist.size(); m++){
-						if (m != index_temp){ // index_sphere
-							if (_spherelist[m].checkShadow(ray_to_light,_lightsourcelist[l]) == true)
-								shadowcheck = true;
-						}
-					}
-					if (shadowcheck == false){
-						if (objtype == 1){
-							diffusive += (_spherelist[index_s].GetK_d() * max(0.0, (unit_to_source.DotProduct(normal_at_point))));
-							specular += (_spherelist[index_s].GetK_s() * pow(max(0.0, unit_to_source.DotProduct(_raylist[index_r].GetUnit())), _spherelist[index_s].GetAlpha()));
-						}
-						else if (objtype == 0){
-							
-							diffusive += (_planelist[index_s].GetK_d() * max(0.0, (unit_to_source.DotProduct(normal_at_point))));
-							specular += (_planelist[index_s].GetK_s() * pow(max(0.0, unit_to_source.DotProduct(_raylist[index_r].GetUnit())), _planelist[index_s].GetAlpha()));
-						}
-					}
-				}
-				if (objtype == 1){
-					double ambient = (_spherelist[index_s].GetK_a());
-					double *illumination_array = normalisedIllumination(_spherelist[index_s], ambient, diffusive, specular);
-					illumination[0] = illumination_array[0];
-					illumination[1] = illumination_array[1];
-					illumination[2] = illumination_array[2];
-				}
-				else if (objtype == 0){
-					double ambient = (_planelist[index_s].GetK_a());
-					double *illumination_array = normalisedIllumination(_planelist[index_s], ambient, diffusive, specular);
-					illumination[0] = illumination_array[0];
-					illumination[1] = illumination_array[1];
-					illumination[2] = illumination_array[2];
-				}
-			}
-			
-			_raylist.clear();
-			_indexlist.clear();
-			_objecttype.clear();
-			inputBMP(illumination, i,j);
+			_primary_rays++;
+			Trace(_viewplane.GetPixelRay(_camera, i, j), 0, illumination);
+			inputBMP(illumination, i, j);
+		}
+		int percent = (100 * (j + 1)) / pixel_y;
+		if (percent != last_percent){
+			last_percent = percent;
+			double elapsed = chrono::duration<double>(chrono::steady_clock::now() - start).count();
+			PrintProgress(j + 1, pixel_y, elapsed);
 		}
 	}
-	cout << "\nFinalising.." << endl;
-	_myimage.WriteToFile(_directory);
-	cout << "Render complete! \nImage Location ->  "<< _directory << endl;
+	double render_seconds = chrono::duration<double>(chrono::steady_clock::now() - start).count();
+	cout << "\n";
+	PrintRule();
+
+	//------------------------------------------------------Results
+	long long total_rays = _primary_rays + _reflection_rays + _shadow_rays;
+	ostringstream render_time, throughput;
+	render_time << fixed << setprecision(2) << render_seconds << " s";
+	throughput << fixed << setprecision(1) << (total_rays / render_seconds) / 1e6 << " M rays/s";
+	PrintField("Render time", render_time.str());
+	PrintField("Rays traced", FormatCount(total_rays));
+	PrintField("  primary", FormatCount(_primary_rays));
+	PrintField("  reflection", FormatCount(_reflection_rays));
+	PrintField("  shadow", FormatCount(_shadow_rays));
+	PrintField("Throughput", throughput.str());
+
+	if (_myimage.WriteToFile(_directory))
+		PrintField("Saved to", _directory);
+	else
+		PrintField("Error", string("could not write ") + _directory);
+	cout << endl;
 }

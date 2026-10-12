@@ -14,11 +14,12 @@ private:
 	Vector3D _centre;
 	double _k_a, _k_d, _k_s, _alpha;
 	int _red, _green, _blue;
+	double _reflectivity;
 public:
 
 	//----------------------------------------------------------Constructors and Dstructors
 
-	Sphere(double r, Vector3D centre, double k_a, double k_d, double k_s, double alpha, int red, int green, int blue);
+	Sphere(double r, Vector3D centre, double k_a, double k_d, double k_s, double alpha, int red, int green, int blue, double reflectivity = 0);
 	Sphere();
 	~Sphere();
 
@@ -35,10 +36,12 @@ public:
 	int GetRed();
 	int GetGreen();
 	int GetBlue();
+	double GetReflectivity();
 
 	//----------------------------------------------------------Ray-Sphere Calculations
 
 	bool intersect(Ray ray);
+	double Distance(Ray ray);
 	bool checkShadow(Ray ray,Vector3D lightsource);
 	Ray Reflect(Ray ray);
 

@@ -16,8 +16,21 @@ Vector3D::~Vector3D()
 }
 double* Vector3D::GetVar()
 {
-	double var[3] = { this->_x, this->_y, this->_z };
+	static thread_local double var[3];
+	var[0] = this->_x; var[1] = this->_y; var[2] = this->_z;
 	return var;
+}
+double Vector3D::GetX() const
+{
+	return this->_x;
+}
+double Vector3D::GetY() const
+{
+	return this->_y;
+}
+double Vector3D::GetZ() const
+{
+	return this->_z;
 }
 double Vector3D::Magnitude()
 {
@@ -33,6 +46,14 @@ double Vector3D::DotProduct(const Vector3D& vector)
 	multiplied._z = this->_z * vector._z;
 	dot_prod = multiplied._x + multiplied._y + multiplied._z;
 	return dot_prod;
+}
+Vector3D Vector3D::CrossProduct(const Vector3D& vector)
+{
+	Vector3D cross;
+	cross._x = this->_y * vector._z - this->_z * vector._y;
+	cross._y = this->_z * vector._x - this->_x * vector._z;
+	cross._z = this->_x * vector._y - this->_y * vector._x;
+	return cross;
 }
 Vector3D Vector3D::MakeUnitVector()
 {
