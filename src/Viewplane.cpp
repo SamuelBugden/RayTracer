@@ -35,9 +35,9 @@ int Viewplane::GetPixel_y()
 }
 Ray Viewplane::GetPixelRay(Vector3D camera, int i, int j)
 {
-	double x = this->_position.GetVar()[0] - ((this->_width) / 2) + (_pixelwidth / 2) + (i * _pixelwidth);
-	double y = this->_position.GetVar()[1] + ((this->_height) / 2) - (_pixelheight / 2) - (j * _pixelheight);
-	double z = this->_position.GetVar()[2];
+	double x = this->_position.GetX() - ((this->_width) / 2) + (_pixelwidth / 2) + (i * _pixelwidth);
+	double y = this->_position.GetY() + ((this->_height) / 2) - (_pixelheight / 2) - (j * _pixelheight);
+	double z = this->_position.GetZ();
 	Vector3D pixel(x, y, z);
 	Vector3D vector_to_pixel = pixel - camera;
 	Vector3D unit_vector = vector_to_pixel.MakeUnitVector();

@@ -43,8 +43,8 @@ public:
 	//----------------------------------------------------------Scene Object Functions
 
 	int CalcNearestSurface(vector<Ray> raylist);
-	double* normalisedIllumination(Sphere this_sphere, double ambient, double diffusive, double specular);
-	double* normalisedIllumination(Plane this_plane, double ambient, double diffusive, double specular);
+	void normalisedIllumination(Sphere this_sphere, double ambient, double diffusive, double specular, double illumination[3]);
+	void normalisedIllumination(Plane this_plane, double ambient, double diffusive, double specular, double illumination[3]);
 
 	//----------------------------------------------------------Image Render Functions
 

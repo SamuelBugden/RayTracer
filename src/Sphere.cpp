@@ -70,10 +70,11 @@ bool Sphere::intersect(Ray ray)
 	double b = (2 * ray.GetUnit()).DotProduct((ray.GetPoint() - this->_centre));
 	double c = (ray.GetPoint() - this->_centre).DotProduct(ray.GetPoint() - this->_centre) - pow(this->_r, 2);
 	double discriminant = pow(b, 2) - 4 * a * c;
-	if (discriminant >= 0)
-		return true;
-	else
+	if (discriminant < 0)
 		return false;
+	// Only count the sphere if it lies in front of the ray origin
+	double root1 = (-b + sqrt(discriminant)) / (2 * a);
+	return root1 > 0;
 }
 bool Sphere::checkShadow(Ray ray,Vector3D lightsource)
 {
@@ -82,7 +83,8 @@ bool Sphere::checkShadow(Ray ray,Vector3D lightsource)
 	double c = (ray.GetPoint() - this->_centre).DotProduct(ray.GetPoint() - this->_centre) - pow(this->_r, 2);
 	double root1 = (-b + sqrt(pow(b, 2) - 4 * a*c)) / (2 * a);
 	double root2 = (-b - sqrt(pow(b, 2) - 4 * a*c)) / (2 * a);
-	if (root1 > 0 && root2 > 0)
+	double distance_to_light = (lightsource - ray.GetPoint()).Magnitude();
+	if (root1 > 0 && root2 > 0 && root2 < distance_to_light)
 		return true;
 	else
 		return false;

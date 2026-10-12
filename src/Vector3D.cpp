@@ -16,8 +16,21 @@ Vector3D::~Vector3D()
 }
 double* Vector3D::GetVar()
 {
-	double var[3] = { this->_x, this->_y, this->_z };
+	static thread_local double var[3];
+	var[0] = this->_x; var[1] = this->_y; var[2] = this->_z;
 	return var;
+}
+double Vector3D::GetX() const
+{
+	return this->_x;
+}
+double Vector3D::GetY() const
+{
+	return this->_y;
+}
+double Vector3D::GetZ() const
+{
+	return this->_z;
 }
 double Vector3D::Magnitude()
 {

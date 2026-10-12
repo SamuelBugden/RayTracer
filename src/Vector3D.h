@@ -20,6 +20,9 @@ public:
 	//----------------------------------------------------------Call Member Functions
 
 	double* GetVar();
+	double GetX() const;
+	double GetY() const;
+	double GetZ() const;
 
 	//----------------------------------------------------------Vector Maths Functions 
 

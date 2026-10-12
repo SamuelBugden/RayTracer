@@ -8,7 +8,7 @@
 
 using namespace std;
 
-int main(){
+int main(int argc, char* argv[]){
 
 	//-----------------------------------------------------------Defining variables
 
@@ -25,15 +25,15 @@ int main(){
 
 	Scene scene(camera, viewplane, lightsource1);
 
-	Vector3D sphere1(-9, 2, 51);
-	Vector3D sphere2(-2, -4, 33);
-	Vector3D sphere3(2, -7, 20);
-	Vector3D sphere4(3.5, -9, 15);
-
-	Sphere mySphere1(12, sphere1, 0.2, 1, 0.9, 20, 200, 200, 0);
-	Sphere mySphere2(6, sphere2, 0.2, 1, 0.9, 15, 200, 0, 0);
-	Sphere mySphere3(3, sphere3, 0.2, 1, 0.9, 14, 0, 200, 200);
-	Sphere mySphere4(1, sphere4, 0.2, 1, 0.9, 14, 0, 200, 0);
+	// Spheres resting on the floor (y = -10): centre y = -10 + radius
+	//        radius, centre,                    k_a, k_d, k_s, alpha, R,   G,   B
+	Sphere mySphere1(5,   Vector3D(-8, -5, 35),    0.2, 1, 0.9, 20, 220, 40, 40);    // red
+	Sphere mySphere2(4,   Vector3D(6, -6, 30),     0.2, 1, 0.9, 30, 230, 180, 30);   // gold
+	Sphere mySphere3(3,   Vector3D(0, -7, 22),     0.2, 1, 0.9, 15, 40, 90, 230);    // blue
+	Sphere mySphere4(2,   Vector3D(-4, -8, 17),    0.2, 1, 0.9, 14, 40, 200, 70);    // green
+	Sphere mySphere5(1.5, Vector3D(3.5, -8.5, 15), 0.2, 1, 0.9, 14, 170, 60, 220);   // purple
+	Sphere mySphere6(8,   Vector3D(-17, -2, 58),   0.2, 1, 0.9, 25, 30, 200, 200);   // cyan
+	Sphere mySphere7(6,   Vector3D(16, -4, 52),    0.2, 1, 0.9, 25, 240, 240, 240);  // white
 
 	Vector3D plane_normal1(0, 1, 0), point_on_plane1(0, -10, 0);
 	Vector3D plane_normal2(0, -1, 0), point_on_plane2(0, 30, 0);
@@ -51,6 +51,9 @@ int main(){
 	scene.AddSphere(mySphere2);
 	scene.AddSphere(mySphere3);
 	scene.AddSphere(mySphere4);
+	scene.AddSphere(mySphere5);
+	scene.AddSphere(mySphere6);
+	scene.AddSphere(mySphere7);
 
 	scene.AddPlane(plane1);
 	scene.AddPlane(plane2);
@@ -61,7 +64,8 @@ int main(){
 	scene.AddLightsource(lightsource2);
 	scene.AddLightsource(lightsource3);
 
-	scene.SetDirectory("D:\\Git\\C++\\RayTracer\\images\\Trial.bmp");
+	// Output path can be given as the first argument
+	scene.SetDirectory(argc > 1 ? argv[1] : "Render.bmp");
 	scene.Engage();
 	//-----------------------------------------------------------Tests
 

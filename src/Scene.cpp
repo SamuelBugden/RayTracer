@@ -42,7 +42,7 @@ int Scene::CalcNearestSurface(vector<Ray> raylist)
 	}
 	return index;
 }
-double* Scene::normalisedIllumination(Sphere sphere, double ambient, double diffusive, double specular)
+void Scene::normalisedIllumination(Sphere sphere, double ambient, double diffusive, double specular, double illumination[3])
 {
 	int Red_colour = sphere.GetRed();
 	int Green_colour = sphere.GetGreen();
@@ -60,10 +60,11 @@ double* Scene::normalisedIllumination(Sphere sphere, double ambient, double diff
 		green_component = green_component + ((overload * Green_colour) / 2);
 		blue_component = blue_component + ((overload * Blue_colour) / 2);
 	}
-	double illumination[3] = { red_component, green_component, blue_component };
-	return illumination;
+	illumination[0] = red_component;
+	illumination[1] = green_component;
+	illumination[2] = blue_component;
 }
-double* Scene::normalisedIllumination(Plane plane, double ambient, double diffusive, double specular)
+void Scene::normalisedIllumination(Plane plane, double ambient, double diffusive, double specular, double illumination[3])
 {
 	int Red_colour = plane.GetRed();
 	int Green_colour = plane.GetGreen();
@@ -81,8 +82,9 @@ double* Scene::normalisedIllumination(Plane plane, double ambient, double diffus
 		green_component = green_component + ((overload * Green_colour) / 2);
 		blue_component = blue_component + ((overload * Blue_colour) / 2);
 	}
-	double illumination[3] = { red_component, green_component, blue_component };
-	return illumination;
+	illumination[0] = red_component;
+	illumination[1] = green_component;
+	illumination[2] = blue_component;
 }
 void Scene::inputBMP(double illumination[],int i, int j)
 {
@@ -159,7 +161,7 @@ void Scene::Engage()
 					Vector3D unit_to_source = (_lightsourcelist[l] - _raylist[index_r].GetPoint()).MakeUnitVector();
 					Ray ray_to_light(unit_to_source, _raylist[index_r].GetPoint());
 					bool shadowcheck = false;
-					int index_temp;
+					int index_temp = -1;
 					if (objtype == 1)
 						index_temp = index_s;
 					if (objtype == 0)
@@ -185,17 +187,11 @@ void Scene::Engage()
 				}
 				if (objtype == 1){
 					double ambient = (_spherelist[index_s].GetK_a());
-					double *illumination_array = normalisedIllumination(_spherelist[index_s], ambient, diffusive, specular);
-					illumination[0] = illumination_array[0];
-					illumination[1] = illumination_array[1];
-					illumination[2] = illumination_array[2];
+					normalisedIllumination(_spherelist[index_s], ambient, diffusive, specular, illumination);
 				}
 				else if (objtype == 0){
 					double ambient = (_planelist[index_s].GetK_a());
-					double *illumination_array = normalisedIllumination(_planelist[index_s], ambient, diffusive, specular);
-					illumination[0] = illumination_array[0];
-					illumination[1] = illumination_array[1];
-					illumination[2] = illumination_array[2];
+					normalisedIllumination(_planelist[index_s], ambient, diffusive, specular, illumination);
 				}
 			}
 			
