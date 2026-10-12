@@ -3,6 +3,7 @@
 Plane::Plane(Vector3D normal, Vector3D point, double k_a, double k_d, double k_s, double alpha, int red, int green, int blue, double reflectivity)
 {
 	_reflectivity = reflectivity;
+	_tile_size = 0;
 	_NormalUnitVector = normal.MakeUnitVector();
 	_PointOnPlane = point;
 	_k_a = k_a;
@@ -15,6 +16,7 @@ Plane::Plane(Vector3D normal, Vector3D point, double k_a, double k_d, double k_s
 }
 Plane::Plane()
 {
+	_tile_size = 0;
 }
 Plane::~Plane()
 {
@@ -65,6 +67,33 @@ int Plane::GetBlue()
 double Plane::GetReflectivity()
 {
 	return this->_reflectivity;
+}
+void Plane::SetChecker(int red, int green, int blue, double tile_size)
+{
+	_check_red = red;
+	_check_green = green;
+	_check_blue = blue;
+	_tile_size = tile_size;
+}
+void Plane::GetColourAt(Vector3D point, double colour[3])
+{
+	colour[0] = _red;
+	colour[1] = _green;
+	colour[2] = _blue;
+	if (_tile_size <= 0)
+		return;
+	// Build two axes lying in the plane and count whole tiles along each
+	Vector3D helper = fabs(_NormalUnitVector.GetX()) < 0.9 ? Vector3D(1, 0, 0) : Vector3D(0, 1, 0);
+	Vector3D axis_u = _NormalUnitVector.CrossProduct(helper).MakeUnitVector();
+	Vector3D axis_v = _NormalUnitVector.CrossProduct(axis_u);
+	Vector3D offset = point - _PointOnPlane;
+	long tile_u = (long)floor(offset.DotProduct(axis_u) / _tile_size);
+	long tile_v = (long)floor(offset.DotProduct(axis_v) / _tile_size);
+	if ((tile_u + tile_v) % 2 != 0){
+		colour[0] = _check_red;
+		colour[1] = _check_green;
+		colour[2] = _check_blue;
+	}
 }
 // Distance along the ray to the plane, or -1 if the ray is parallel to it or points away from it
 double Plane::Distance(Ray ray)

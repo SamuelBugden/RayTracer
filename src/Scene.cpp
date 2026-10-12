@@ -1,6 +1,9 @@
 #include "Scene.h"
 #include <iostream>
 #include <string>
+#include <chrono>
+#include <iomanip>
+#include <sstream>
 using namespace std;
 
 // Secondary rays start this far off the surface so they don't immediately re-hit it
@@ -14,6 +17,7 @@ Scene::Scene(Vector3D camera, Viewplane viewplane, Vector3D lightsource)
 	_directory = "Render.bmp";
 	_max_depth = 5;
 	_light_intensity = 2.0;
+	_primary_rays = _reflection_rays = _shadow_rays = 0;
 }
 Scene::~Scene()
 {
@@ -76,8 +80,8 @@ bool Scene::NearestSurface(Ray ray, Vector3D& point, Vector3D& normal, Material&
 	else{
 		Plane& plane = _planelist[index];
 		normal = plane.GetNormal();
-		material = { plane.GetK_a(), plane.GetK_d(), plane.GetK_s(), plane.GetAlpha(), plane.GetReflectivity(),
-			{ (double)plane.GetRed(), (double)plane.GetGreen(), (double)plane.GetBlue() } };
+		material = { plane.GetK_a(), plane.GetK_d(), plane.GetK_s(), plane.GetAlpha(), plane.GetReflectivity(), { 0, 0, 0 } };
+		plane.GetColourAt(point, material.colour);
 	}
 	// Shade the side of the surface the ray arrived from
 	if (normal.DotProduct(ray.GetUnit()) > 0)
@@ -86,6 +90,7 @@ bool Scene::NearestSurface(Ray ray, Vector3D& point, Vector3D& normal, Material&
 }
 bool Scene::InShadow(Vector3D point, Vector3D lightsource)
 {
+	_shadow_rays++;
 	Vector3D to_light = lightsource - point;
 	double distance_to_light = to_light.Magnitude();
 	Ray ray_to_light(to_light.MakeUnitVector(), point);
@@ -125,6 +130,7 @@ void Scene::Trace(Ray ray, int depth, double colour[3])
 	//------------------------------------------------------Reflections: trace the reflected ray and blend it in
 	if (material.reflectivity > 0 && depth < _max_depth){
 		double reflected_colour[3];
+		_reflection_rays++;
 		Trace(Ray(reflected_unit, surface_point), depth + 1, reflected_colour);
 		for (int c = 0; c < 3; c++)
 			colour[c] = (1 - material.reflectivity) * colour[c] + material.reflectivity * reflected_colour[c];
@@ -138,6 +144,49 @@ void Scene::inputBMP(double illumination[],int i, int j)
 	_myimage(i, j)->Alpha = 0;
 }
 
+// Formats a count with thousands separators, eg. 1234567 -> 1,234,567
+static string FormatCount(long long n)
+{
+	string digits = to_string(n);
+	string formatted;
+	int length = (int)digits.size();
+	for (int c = 0; c < length; c++){
+		formatted += digits[c];
+		if ((length - c - 1) % 3 == 0 && c != length - 1)
+			formatted += ',';
+	}
+	return formatted;
+}
+static void PrintRule()
+{
+	cout << "  " << string(60, '-') << "\n";
+}
+static void PrintField(const string& label, const string& value)
+{
+	cout << "  " << left << setw(16) << label << value << "\n";
+}
+void Scene::PrintProgress(int rows_done, int rows_total, double seconds_elapsed)
+{
+	const int bar_width = 36;
+	double fraction = (double)rows_done / rows_total;
+	int filled = (int)(fraction * bar_width);
+
+	string bar(filled, '=');
+	if (filled < bar_width)
+		bar += '>' + string(bar_width - filled - 1, ' ');
+
+	ostringstream timing;
+	timing << fixed << setprecision(1);
+	if (rows_done < rows_total){
+		double remaining = rows_done > 0 ? seconds_elapsed * (rows_total - rows_done) / rows_done : 0;
+		timing << "ETA " << remaining << "s";
+	}
+	else
+		timing << "done in " << seconds_elapsed << "s";
+
+	cout << "\r  Rendering  [" << bar << "] " << right << setw(3) << (int)(fraction * 100) << "%  "
+		<< left << setw(18) << timing.str() << flush;
+}
 void Scene::Engage()
 {
 	int pixel_x = _viewplane.GetPixel_x();
@@ -145,24 +194,54 @@ void Scene::Engage()
 
 	_myimage.SetSize(pixel_x, pixel_y);
 	_myimage.SetBitDepth(32);
+	_primary_rays = _reflection_rays = _shadow_rays = 0;
 
-	cout << "Rendering..." << endl;
-	int count_max = pixel_x * pixel_y;
-	int count = 0;
-	cout << "|< - - -100%- - - >|" << endl;
+	//------------------------------------------------------Scene summary
+	cout << "\n  RayTracer\n";
+	PrintRule();
+	PrintField("Resolution", to_string(pixel_x) + " x " + to_string(pixel_y) + " px");
+	PrintField("Objects", to_string(_spherelist.size()) + " spheres, " + to_string(_planelist.size()) + " planes");
+	PrintField("Lights", to_string(_lightsourcelist.size()));
+	PrintField("Max bounces", to_string(_max_depth));
+	PrintRule();
+
+	//------------------------------------------------------Render, updating the progress bar once per row
+	auto start = chrono::steady_clock::now();
+	int last_percent = 0;
+	PrintProgress(0, pixel_y, 0);
 	for (int j = 0; j < pixel_y; j++){
 		for (int i = 0; i < pixel_x; i++){
-			count++;
-			if (count == (count_max / 10)){
-				cout << " #";
-				count = 0;
-			}
 			double illumination[3];
+			_primary_rays++;
 			Trace(_viewplane.GetPixelRay(_camera, i, j), 0, illumination);
 			inputBMP(illumination, i, j);
 		}
+		int percent = (100 * (j + 1)) / pixel_y;
+		if (percent != last_percent){
+			last_percent = percent;
+			double elapsed = chrono::duration<double>(chrono::steady_clock::now() - start).count();
+			PrintProgress(j + 1, pixel_y, elapsed);
+		}
 	}
-	cout << "\nFinalising.." << endl;
-	_myimage.WriteToFile(_directory);
-	cout << "Render complete! \nImage Location ->  "<< _directory << endl;
+	double render_seconds = chrono::duration<double>(chrono::steady_clock::now() - start).count();
+	cout << "\n";
+	PrintRule();
+
+	//------------------------------------------------------Results
+	long long total_rays = _primary_rays + _reflection_rays + _shadow_rays;
+	ostringstream render_time, throughput;
+	render_time << fixed << setprecision(2) << render_seconds << " s";
+	throughput << fixed << setprecision(1) << (total_rays / render_seconds) / 1e6 << " M rays/s";
+	PrintField("Render time", render_time.str());
+	PrintField("Rays traced", FormatCount(total_rays));
+	PrintField("  primary", FormatCount(_primary_rays));
+	PrintField("  reflection", FormatCount(_reflection_rays));
+	PrintField("  shadow", FormatCount(_shadow_rays));
+	PrintField("Throughput", throughput.str());
+
+	if (_myimage.WriteToFile(_directory))
+		PrintField("Saved to", _directory);
+	else
+		PrintField("Error", string("could not write ") + _directory);
+	cout << endl;
 }

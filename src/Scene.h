@@ -33,6 +33,7 @@ private:
 	Viewplane _viewplane;
 	int _max_depth;
 	double _light_intensity;
+	long long _primary_rays, _reflection_rays, _shadow_rays;
 public:
 
 	//----------------------------------------------------------Constructors and Destructors
@@ -58,6 +59,7 @@ public:
 	//----------------------------------------------------------Image Render Functions
 
 	void inputBMP(double illumination[], int i, int j);
+	void PrintProgress(int rows_done, int rows_total, double seconds_elapsed);
 	void Engage();
 };
 #endif

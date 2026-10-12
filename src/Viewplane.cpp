@@ -10,6 +10,22 @@ Viewplane::Viewplane(int pixelwidth, int pixelheight, double width, double heigh
 	_position = position;
 	_pixelheight = _height / _pixels_y;
 	_pixelwidth = _width / _pixels_x;
+	_right = Vector3D(1, 0, 0);
+	_up = Vector3D(0, 1, 0);
+}
+// Viewplane one unit in front of the camera, facing look_at, spanning fov_degrees horizontally
+Viewplane::Viewplane(int pixelwidth, int pixelheight, double fov_degrees, Vector3D camera, Vector3D look_at, Vector3D up)
+{
+	_pixels_y = pixelheight;
+	_pixels_x = pixelwidth;
+	Vector3D forward = (look_at - camera).MakeUnitVector();
+	_right = up.CrossProduct(forward).MakeUnitVector();
+	_up = forward.CrossProduct(_right);
+	_position = camera + forward;
+	_width = 2 * tan(fov_degrees * acos(-1.0) / 360);
+	_height = _width * _pixels_y / _pixels_x;
+	_pixelheight = _height / _pixels_y;
+	_pixelwidth = _width / _pixels_x;
 }
 Viewplane::Viewplane()
 {
@@ -35,10 +51,9 @@ int Viewplane::GetPixel_y()
 }
 Ray Viewplane::GetPixelRay(Vector3D camera, int i, int j)
 {
-	double x = this->_position.GetX() - ((this->_width) / 2) + (_pixelwidth / 2) + (i * _pixelwidth);
-	double y = this->_position.GetY() + ((this->_height) / 2) - (_pixelheight / 2) - (j * _pixelheight);
-	double z = this->_position.GetZ();
-	Vector3D pixel(x, y, z);
+	double x = -((this->_width) / 2) + (_pixelwidth / 2) + (i * _pixelwidth);
+	double y = ((this->_height) / 2) - (_pixelheight / 2) - (j * _pixelheight);
+	Vector3D pixel = this->_position + (x * this->_right) + (y * this->_up);
 	Vector3D vector_to_pixel = pixel - camera;
 	Vector3D unit_vector = vector_to_pixel.MakeUnitVector();
 	Ray PixelRay(unit_vector, camera);

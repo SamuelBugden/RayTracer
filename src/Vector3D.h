@@ -28,6 +28,7 @@ public:
 
 	double Magnitude();
 	double DotProduct(const Vector3D& vector);
+	Vector3D CrossProduct(const Vector3D& vector);
 	Vector3D MakeUnitVector();
 
 	//----------------------------------------------------------Overloaded Operators

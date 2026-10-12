@@ -47,6 +47,14 @@ double Vector3D::DotProduct(const Vector3D& vector)
 	dot_prod = multiplied._x + multiplied._y + multiplied._z;
 	return dot_prod;
 }
+Vector3D Vector3D::CrossProduct(const Vector3D& vector)
+{
+	Vector3D cross;
+	cross._x = this->_y * vector._z - this->_z * vector._y;
+	cross._y = this->_z * vector._x - this->_x * vector._z;
+	cross._z = this->_x * vector._y - this->_y * vector._x;
+	return cross;
+}
 Vector3D Vector3D::MakeUnitVector()
 {
 	Vector3D vector(this->_x, this->_y, this->_z);

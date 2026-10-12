@@ -11,11 +11,13 @@ private:
 	double _width, _height;
 	double _pixelwidth, _pixelheight;
 	Vector3D _position;
+	Vector3D _right, _up;
 public:
 
 	//----------------------------------------------------------Constructors and Destructors
 
 	Viewplane(int pixelwidth, int pixelheight, double width, double height, Vector3D position);
+	Viewplane(int pixelwidth, int pixelheight, double fov_degrees, Vector3D camera, Vector3D look_at, Vector3D up = Vector3D(0, 1, 0));
 	Viewplane();
 	~Viewplane();
 

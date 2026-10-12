@@ -13,6 +13,8 @@ private:
 	double _k_a, _k_d, _k_s, _alpha;
 	int _red, _green, _blue;
 	double _reflectivity;
+	int _check_red, _check_green, _check_blue;
+	double _tile_size;
 public:
 
 	//----------------------------------------------------------Constructors and Destructors
@@ -35,6 +37,11 @@ public:
 	int GetGreen();
 	int GetBlue();
 	double GetReflectivity();
+
+	//----------------------------------------------------------Surface Pattern (eg. a chequered floor)
+
+	void SetChecker(int red, int green, int blue, double tile_size);
+	void GetColourAt(Vector3D point, double colour[3]);
 	
 	//----------------------------------------------------------Ray-Plane Calculations
 
