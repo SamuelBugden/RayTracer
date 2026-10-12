@@ -14,7 +14,7 @@ int main(int argc, char* argv[]){
 	// Scene units are roughly 10 cm: the room is 8 m wide, 3 m high and 10 m deep, with the floor at y = 0
 
 	//Define pixels of image
-	int pixel_x = 640, pixel_y = 480;
+	int pixel_x = 1600, pixel_y = 1200;
 
 	// Camera at eye height near the front of the room, looking down at the spheres
 	Vector3D camera(0, 16, -8);
