@@ -1,3 +1,8 @@
 **/images
 **solution/x64/
 .vscode
+# Python
+__pycache__/
+*.egg-info/
+build/
+/python/Render.*

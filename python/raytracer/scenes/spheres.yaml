@@ -1,0 +1,83 @@
+# The sphere room from src/Main.cpp.
+# Units are roughly 10 cm: the room is 8 m wide, 3 m high and 10 m deep, with the floor at y = 0.
+# Colours are RGB 0-255. Material fields: ambient (k_a), diffuse (k_d), specular (k_s),
+# shininess (alpha), colour and an optional reflectivity between 0 and 1.
+
+image:
+  width: 1600
+  height: 1200
+
+# Eye height near the front of the room, looking down at the spheres
+camera:
+  position: [0, 16, -8]
+  look_at: [0, 3, 38]
+  fov: 55              # horizontal, degrees
+
+render:
+  max_depth: 5         # reflection bounces
+  light_intensity: 2.0 # shared between the lights
+
+# Just below the ceiling: key light front-left, fill front-right, back light
+lights:
+  - [-18, 28, 12]
+  - [22, 26, 2]
+  - [4, 28, 55]
+
+# Resting on the floor, so centre y = radius
+spheres:
+  - name: chrome
+    radius: 5
+    centre: [-9, 5, 42]
+    material: {ambient: 0.15, diffuse: 0.6, specular: 1.0, shininess: 120, colour: [225, 225, 230], reflectivity: 0.85}
+  - name: red
+    radius: 4
+    centre: [5, 4, 34]
+    material: {ambient: 0.15, diffuse: 0.9, specular: 0.6, shininess: 60, colour: [200, 30, 30], reflectivity: 0.12}
+  - name: gold
+    radius: 3.5
+    centre: [15, 3.5, 47]
+    material: {ambient: 0.15, diffuse: 0.9, specular: 0.8, shininess: 80, colour: [230, 175, 40], reflectivity: 0.45}
+  - name: blue
+    radius: 3
+    centre: [-2, 3, 27]
+    material: {ambient: 0.15, diffuse: 0.9, specular: 0.6, shininess: 60, colour: [35, 80, 210], reflectivity: 0.12}
+  - name: green
+    radius: 2
+    centre: [-12, 2, 29]
+    material: {ambient: 0.15, diffuse: 0.9, specular: 0.5, shininess: 50, colour: [40, 170, 70], reflectivity: 0.08}
+  - name: purple
+    radius: 1.5
+    centre: [8, 1.5, 25]
+    material: {ambient: 0.15, diffuse: 0.9, specular: 0.5, shininess: 50, colour: [150, 50, 200], reflectivity: 0.08}
+  - name: teal
+    radius: 6
+    centre: [-24, 6, 62]
+    material: {ambient: 0.15, diffuse: 0.9, specular: 0.4, shininess: 40, colour: [30, 170, 175], reflectivity: 0.1}
+
+# A closed room, so reflections always land on a surface rather than empty black space
+planes:
+  - name: floor
+    normal: [0, 1, 0]
+    point: [0, 0, 0]
+    material: {ambient: 0.15, diffuse: 0.8, specular: 0.3, shininess: 40, colour: [205, 205, 200], reflectivity: 0.2}
+    checker: {colour: [95, 95, 100], tile_size: 5}   # 50 cm tiles
+  - name: ceiling
+    normal: [0, -1, 0]
+    point: [0, 30, 0]
+    material: {ambient: 0.3, diffuse: 0.6, specular: 0.0, shininess: 1, colour: [235, 235, 230]}
+  - name: left wall
+    normal: [1, 0, 0]
+    point: [-40, 0, 0]
+    material: {ambient: 0.2, diffuse: 0.7, specular: 0.05, shininess: 10, colour: [200, 190, 175]}
+  - name: right wall
+    normal: [-1, 0, 0]
+    point: [40, 0, 0]
+    material: {ambient: 0.2, diffuse: 0.7, specular: 0.05, shininess: 10, colour: [200, 190, 175]}
+  - name: back wall
+    normal: [0, 0, -1]
+    point: [0, 0, 80]
+    material: {ambient: 0.2, diffuse: 0.45, specular: 0.05, shininess: 10, colour: [165, 172, 185]}
+  - name: front wall
+    normal: [0, 0, 1]
+    point: [0, 0, -20]
+    material: {ambient: 0.2, diffuse: 0.7, specular: 0.05, shininess: 10, colour: [200, 190, 175]}

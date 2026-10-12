@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "raytracer"
+version = "0.1.0"
+description = "A small recursive ray tracer: Phong shading, hard shadows and reflections"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.22",
+    "pyyaml>=6.0",
+    "pillow>=9.1",
+]
+
+[project.scripts]
+raytracer = "raytracer.__main__:main"
+
+[tool.setuptools]
+packages = ["raytracer"]
+
+[tool.setuptools.package-data]
+raytracer = ["scenes/*.yaml"]

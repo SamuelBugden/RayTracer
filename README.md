@@ -9,3 +9,5 @@ g++ -O2 -o raytracer src/*.cpp
 ./raytracer Render.bmp
 ```
 The scene is defined in `src/Main.cpp`. The output path is the first argument (default `Render.bmp`).
+
+A Python 3 port lives in [`python/`](python/README.md).
