@@ -20,6 +20,8 @@ The `.devcontainer/` folder sets up a Debian 13 Linux container with Python 3.14
 
 **On Windows with WSL 2:** use Docker Desktop with the WSL 2 backend, or Docker Engine installed inside your WSL distro. Clone the repo inside the WSL filesystem (eg. `~/code/RayTracer`, not `/mnt/c/...`) for much faster file access, then run `code .` from that folder in WSL and reopen in the container. Files the container creates are owned by your WSL user.
 
+The container also has Claude Code (the `claude` CLI and the VS Code extension). Run `claude` once and log in. The login is kept on the `raytracer-claude-config` Docker volume, so it survives container rebuilds. To log out, remove that volume with `docker volume rm raytracer-claude-config`.
+
 Once it's built, use **Terminal → Run Task** for:
 
 | Task | What it does |

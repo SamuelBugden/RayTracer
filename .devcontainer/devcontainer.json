@@ -9,8 +9,25 @@
     "remoteUser": "vscode",
     "updateRemoteUserUID": true,
 
-    // Installs numpy, PyYAML and Pillow, plus the `raytracer` command (editable, so code changes apply immediately)
-    "postCreateCommand": "pip install -e ./python && mkdir -p images build",
+    // Claude Code CLI and VS Code extension (the CLI needs Node)
+    "features": {
+        "ghcr.io/devcontainers/features/node:1": {},
+        "ghcr.io/anthropics/devcontainer-features/claude-code:1": {}
+    },
+
+    // Claude Code's login and settings persist on a named volume across rebuilds.
+    // CLAUDE_CONFIG_DIR keeps ~/.claude.json in there too, not just ~/.claude/.
+    // To log out of every container: docker volume rm raytracer-claude-config
+    "mounts": [
+        "source=raytracer-claude-config,target=/home/vscode/.claude,type=volume"
+    ],
+    "containerEnv": {
+        "CLAUDE_CONFIG_DIR": "/home/vscode/.claude"
+    },
+
+    // Makes sure the volume is writable, then installs numpy, PyYAML and Pillow plus the
+    // `raytracer` command (editable, so code changes apply immediately)
+    "postCreateCommand": "sudo chown -R vscode:vscode /home/vscode/.claude && pip install -e ./python && mkdir -p images build",
 
     "customizations": {
         "vscode": {
