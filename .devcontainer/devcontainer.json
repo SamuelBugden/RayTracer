@@ -4,6 +4,11 @@
         "dockerfile": "Dockerfile"
     },
 
+    // Run as the non-root vscode user, remapped to your WSL / Linux user's UID so files
+    // created in the container (renders, build output) are owned by you on the host
+    "remoteUser": "vscode",
+    "updateRemoteUserUID": true,
+
     // Installs numpy, PyYAML and Pillow, plus the `raytracer` command (editable, so code changes apply immediately)
     "postCreateCommand": "pip install -e ./python && mkdir -p images build",
 

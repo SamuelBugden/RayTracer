@@ -26,21 +26,21 @@
         {
             "label": "Python: render",
             "type": "shell",
-            "command": "python -m raytracer -o ../images/python_render.png",
+            "command": "python3 -m raytracer -o ../images/python_render.png",
             "options": { "cwd": "${workspaceFolder}/python" },
             "problemMatcher": []
         },
         {
             "label": "Python: render (preview, 640x480)",
             "type": "shell",
-            "command": "python -m raytracer --width 640 --height 480 -o ../images/python_preview.png",
+            "command": "python3 -m raytracer --width 640 --height 480 -o ../images/python_preview.png",
             "options": { "cwd": "${workspaceFolder}/python" },
             "problemMatcher": []
         },
         {
             "label": "Python: tests",
             "type": "shell",
-            "command": "python -m unittest discover -s tests -t . -v",
+            "command": "python3 -m unittest discover -s tests -t . -v",
             "options": { "cwd": "${workspaceFolder}/python" },
             "group": { "kind": "test", "isDefault": true },
             "problemMatcher": []

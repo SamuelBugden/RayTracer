@@ -13,10 +13,12 @@ The scene is defined in `src/Main.cpp`. The output path is the first argument (d
 A Python 3 port lives in [`python/`](python/README.md).
 
 ## VS Code dev container
-The `.devcontainer/` folder sets up Python 3.12, numpy/PyYAML/Pillow, g++ and gdb, with the C++, Python and YAML extensions.
+The `.devcontainer/` folder sets up a Debian 13 Linux container with Python 3.14, numpy/PyYAML/Pillow, g++ and gdb, plus the C++, Python and YAML extensions.
 
 1. Install Docker and the VS Code **Dev Containers** extension.
 2. Open this folder in VS Code and choose **Reopen in Container** (or run *Dev Containers: Reopen in Container* from the command palette).
+
+**On Windows with WSL 2:** use Docker Desktop with the WSL 2 backend, or Docker Engine installed inside your WSL distro. Clone the repo inside the WSL filesystem (eg. `~/code/RayTracer`, not `/mnt/c/...`) for much faster file access, then run `code .` from that folder in WSL and reopen in the container. Files the container creates are owned by your WSL user.
 
 Once it's built, use **Terminal → Run Task** for:
 

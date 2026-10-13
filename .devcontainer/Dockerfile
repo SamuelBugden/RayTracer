@@ -1,5 +1,6 @@
-# Python 3.12 on Debian bookworm, with the tools to build and debug the C++ version too
-FROM mcr.microsoft.com/devcontainers/python:1-3.12-bookworm
+# Python 3.14 on Debian 13 (trixie), with the tools to build and debug the C++ version too.
+# Image tag: <image version 3>-<python 3.14>-<debian trixie>
+FROM mcr.microsoft.com/devcontainers/python:3-3.14-trixie
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends g++ gdb make \
