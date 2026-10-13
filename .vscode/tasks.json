@@ -1,0 +1,49 @@
+{
+    // Renders are written to images/ (git-ignored); open them from the Explorer to preview
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "C++: build",
+            "type": "shell",
+            "command": "mkdir -p build && g++ -O2 -Wall -o build/raytracer src/*.cpp",
+            "group": { "kind": "build", "isDefault": true },
+            "problemMatcher": ["$gcc"]
+        },
+        {
+            "label": "C++: build (debug)",
+            "type": "shell",
+            "command": "mkdir -p build && g++ -O0 -g -Wall -o build/raytracer_debug src/*.cpp",
+            "group": "build",
+            "problemMatcher": ["$gcc"]
+        },
+        {
+            "label": "C++: render",
+            "type": "shell",
+            "command": "mkdir -p images && ./build/raytracer images/cpp_render.bmp",
+            "dependsOn": "C++: build",
+            "problemMatcher": []
+        },
+        {
+            "label": "Python: render",
+            "type": "shell",
+            "command": "python -m raytracer -o ../images/python_render.png",
+            "options": { "cwd": "${workspaceFolder}/python" },
+            "problemMatcher": []
+        },
+        {
+            "label": "Python: render (preview, 640x480)",
+            "type": "shell",
+            "command": "python -m raytracer --width 640 --height 480 -o ../images/python_preview.png",
+            "options": { "cwd": "${workspaceFolder}/python" },
+            "problemMatcher": []
+        },
+        {
+            "label": "Python: tests",
+            "type": "shell",
+            "command": "python -m unittest discover -s tests -t . -v",
+            "options": { "cwd": "${workspaceFolder}/python" },
+            "group": { "kind": "test", "isDefault": true },
+            "problemMatcher": []
+        }
+    ]
+}

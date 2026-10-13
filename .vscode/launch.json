@@ -1,0 +1,45 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "C++: debug render",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/raytracer_debug",
+            "args": ["images/cpp_debug.bmp"],
+            "cwd": "${workspaceFolder}",
+            "MIMode": "gdb",
+            "preLaunchTask": "C++: build (debug)",
+            "setupCommands": [
+                { "description": "Pretty-print STL containers", "text": "-enable-pretty-printing", "ignoreFailures": true }
+            ]
+        },
+        {
+            // Single worker so breakpoints in the trace are hit in this process
+            "name": "Python: debug render",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "raytracer",
+            "args": ["--width", "160", "--height", "120", "-j", "1", "-o", "../images/python_debug.png"],
+            "cwd": "${workspaceFolder}/python",
+            "justMyCode": true
+        },
+        {
+            "name": "Python: debug render (choose scene)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "raytracer",
+            "args": ["${input:scene}", "--width", "160", "--height", "120", "-j", "1", "-o", "../images/python_debug.png"],
+            "cwd": "${workspaceFolder}/python",
+            "justMyCode": true
+        }
+    ],
+    "inputs": [
+        {
+            "id": "scene",
+            "type": "promptString",
+            "description": "Scene file, relative to python/",
+            "default": "raytracer/scenes/spheres.yaml"
+        }
+    ]
+}

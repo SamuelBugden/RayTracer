@@ -1,6 +1,8 @@
 **/images
 **solution/x64/
-.vscode
+.vscode/*
+!.vscode/tasks.json
+!.vscode/launch.json
 # Python
 __pycache__/
 *.egg-info/
